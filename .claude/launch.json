@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend-testes",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start", "--prefix", "frontend", "--", "-p", "3002"],
+      "env": { "API_URL": "http://localhost:8001/api/v1" },
+      "port": 3002
+    }
+  ]
+}

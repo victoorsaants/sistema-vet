@@ -1,107 +1,63 @@
-name: sistema-vet
+name: ajuvet
 
 services:
-  # ---------------------------------------------------------------------------
-  # Banco de dados: Supabase local mínimo (Postgres + PostgREST + gateway Kong)
-  # ---------------------------------------------------------------------------
-  db:
-    image: supabase/postgres:17.6.1.136
-    restart: unless-stopped
-    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+  banco:
+    image: postgres:15
     environment:
-      POSTGRES_HOST: /var/run/postgresql
-      POSTGRES_PORT: 5432
-      PGPORT: 5432
-      POSTGRES_DB: postgres
-      PGDATABASE: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
-      PGPASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - db-data:/var/lib/postgresql/data
-      - db-config:/etc/postgresql-custom
-      - ./docker/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
-      - ./docker/db/pgrst-watch.sql:/docker-entrypoint-initdb.d/init-scripts/99-pgrst-watch.sql:ro
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ajuvet}
+      POSTGRES_DB: ajuvet
     ports:
-      # Só localhost: a senha e as chaves de dev estão no repositório
-      - "127.0.0.1:${DB_PORT:-54322}:5432"
+      - "127.0.0.1:${PORTA_BANCO:-5433}:5432"
+    volumes:
+      - banco_ajuvet:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ajuvet"]
       interval: 5s
       timeout: 5s
       retries: 10
-
-  rest:
-    image: postgrest/postgrest:v14.17
     restart: unless-stopped
-    environment:
-      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
-      PGRST_DB_SCHEMAS: public
-      PGRST_DB_ANON_ROLE: anon
-      PGRST_DB_MAX_ROWS: 1000
-      PGRST_JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env}
-      PGRST_DB_USE_LEGACY_GUCS: "false"
-      PGRST_ADMIN_SERVER_PORT: 3001
-      PGRST_ADMIN_SERVER_HOST: localhost
-    depends_on:
-      db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "postgrest", "--ready"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
-  kong:
-    image: kong:3.9.4
-    restart: unless-stopped
-    environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
-      KONG_PROXY_LISTEN: 0.0.0.0:8000
-      KONG_ADMIN_LISTEN: "off"
-      KONG_PROXY_ACCESS_LOG: /dev/stdout
-      KONG_PROXY_ERROR_LOG: /dev/stderr
-    volumes:
-      - ./docker/kong/kong.yml:/usr/local/kong/kong.yml:ro
-    ports:
-      - "127.0.0.1:${SUPABASE_API_PORT:-54321}:8000"
-    depends_on:
-      rest:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "kong", "health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ---------------------------------------------------------------------------
-  # Aplicação
-  # ---------------------------------------------------------------------------
   backend:
-    build: ./backend
-    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     environment:
-      SUPABASE_URL: http://kong:8000
-      SUPABASE_KEY: ${SERVICE_ROLE_KEY:?defina SERVICE_ROLE_KEY no .env}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-ajuvet}@banco:5432/ajuvet
+      JWT_SEGREDO: ${JWT_SEGREDO:-}
+      CARREGAR_DADOS_EXEMPLO: ${CARREGAR_DADOS_EXEMPLO:-false}
+      CORS_ORIGINS: ${URL_FRONTEND:-http://localhost:3000}
+      FUSO_HORARIO: ${FUSO_HORARIO:-America/Maceio}
+      NOME_CLINICA: ${NOME_CLINICA:-AjuVet+ Clínica Veterinária}
+      CONTATO_CLINICA: ${CONTATO_CLINICA:-}
+      EMAIL_REMETENTE: ${EMAIL_REMETENTE:-AjuVet+ <nao-responda@ajuvet.local>}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORTA: ${SMTP_PORTA:-587}
+      SMTP_USUARIO: ${SMTP_USUARIO:-}
+      SMTP_SENHA: ${SMTP_SENHA:-}
+      SMTP_TLS: ${SMTP_TLS:-true}
+    volumes:
+      - arquivos_ajuvet:/app/backend/.arquivos
     ports:
-      - "${BACKEND_PORT:-8001}:8000"
+      - "127.0.0.1:${PORTA_BACKEND:-8000}:8000"
     depends_on:
-      kong:
+      banco:
         condition: service_healthy
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8001}
-    restart: unless-stopped
+    environment:
+      API_URL: http://backend:8000/api/v1
+      COOKIE_SEGURO: ${COOKIE_SEGURO:-false}
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      - "${PORTA_FRONTEND:-3000}:3000"
     depends_on:
       backend:
         condition: service_healthy
+    restart: unless-stopped
 
 volumes:
-  db-data:
-  db-config:
+  banco_ajuvet:
+  arquivos_ajuvet:

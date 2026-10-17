@@ -37,3 +37,9 @@ npm-debug.log*
 .coverage
 htmlcov/
 .pytest_cache/
+
+# Banco local
+.banco_local/
+
+# Anexos enviados no ambiente local
+.arquivos/
