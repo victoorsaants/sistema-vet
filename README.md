@@ -28,7 +28,7 @@ Cada parte roda no seu próprio container:
 | Container | O que é | Endereço |
 |-----------|---------|----------|
 | `frontend` | Next.js em modo produção | http://localhost:3000 |
-| `backend` | API FastAPI; aplica as migrations ao subir | http://localhost:8000/docs |
+| `backend` | API FastAPI; aplica as migrations ao subir | http://localhost:8001/docs |
 | `banco` | PostgreSQL 15 | `localhost:5433` |
 
 Na raiz do projeto, crie o arquivo de configuração:
@@ -65,6 +65,8 @@ Os dados ficam em dois volumes: `banco_ajuvet` (PostgreSQL) e `arquivos_ajuvet` 
 e e-mails salvos quando o SMTP não está configurado). Portas, senha do banco e SMTP se ajustam
 no `.env`. Se o sistema for publicado com HTTPS, use `COOKIE_SEGURO=true`.
 
+> O backend do Docker usa a porta 8001 para não conflitar com o `uvicorn` local, que roda na 8000.
+>
 > A porta 3000 é a mesma do `npm run dev`. Para usar os dois ao mesmo tempo, mude
 > `PORTA_FRONTEND` e `URL_FRONTEND` no `.env`. O mesmo vale para a porta 5433, se o banco local
 > (`banco_local.ps1`) estiver rodando.
