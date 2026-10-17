@@ -1,26 +1,40 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-outfit);
+  --font-manuscrita: var(--font-caveat);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --color-marinho: #073256;
+  --color-marinho-escuro: #012a48;
+  --color-azul-marca: #057fcf;
+  --color-azul-ativo: #0789d6;
+
+  --color-fundo: #f3fbfe;
+  --color-superficie: #ffffff;
+  --color-borda: #e3eef7;
+  --color-destaque-suave: #e3f5fc;
+  --color-destaque-claro: #d6f2fe;
+
+  --color-texto-titulo: #0b3d78;
+  --color-texto-subtitulo: #1f5fa3;
+  --color-texto-corpo: #3f86c6;
+  --color-texto-suave: #7790ae;
+
+  --color-modulo-tutores: #2697e4;
+  --color-modulo-animais: #2ca558;
+  --color-modulo-atendimentos: #9c89ca;
+  --color-modulo-agendamentos: #fbac32;
+  --color-modulo-historico: #38bbc1;
+  --color-modulo-financeiro: #da68a4;
+  --color-modulo-notificacoes: #f07f5a;
+
+  --color-receita: #1f9d74;
+  --color-despesa: #e0457b;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-fundo);
+  color: var(--color-texto-titulo);
 }

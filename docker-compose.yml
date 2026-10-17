@@ -1,0 +1,63 @@
+name: ajuvet
+
+services:
+  banco:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ajuvet}
+      POSTGRES_DB: ajuvet
+    ports:
+      - "127.0.0.1:${PORTA_BANCO:-5433}:5432"
+    volumes:
+      - banco_ajuvet:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ajuvet"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-ajuvet}@banco:5432/ajuvet
+      JWT_SEGREDO: ${JWT_SEGREDO:-}
+      CARREGAR_DADOS_EXEMPLO: ${CARREGAR_DADOS_EXEMPLO:-false}
+      CORS_ORIGINS: ${URL_FRONTEND:-http://localhost:3000}
+      FUSO_HORARIO: ${FUSO_HORARIO:-America/Maceio}
+      NOME_CLINICA: ${NOME_CLINICA:-AjuVet+ Clínica Veterinária}
+      CONTATO_CLINICA: ${CONTATO_CLINICA:-}
+      EMAIL_REMETENTE: ${EMAIL_REMETENTE:-AjuVet+ <nao-responda@ajuvet.local>}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORTA: ${SMTP_PORTA:-587}
+      SMTP_USUARIO: ${SMTP_USUARIO:-}
+      SMTP_SENHA: ${SMTP_SENHA:-}
+      SMTP_TLS: ${SMTP_TLS:-true}
+    volumes:
+      - arquivos_ajuvet:/app/backend/.arquivos
+    ports:
+      - "127.0.0.1:${PORTA_BACKEND:-8000}:8000"
+    depends_on:
+      banco:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      API_URL: http://backend:8000/api/v1
+      COOKIE_SEGURO: ${COOKIE_SEGURO:-false}
+    ports:
+      - "${PORTA_FRONTEND:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  banco_ajuvet:
+  arquivos_ajuvet:
