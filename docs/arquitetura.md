@@ -52,6 +52,8 @@ navegador ──► frontend:3000 ──► backend:8000 ──► banco:5432
   aplica as migrations e, com `CARREGAR_DADOS_EXEMPLO=true`, carrega os dados de exemplo se o
   banco estiver vazio. Anexos e e-mails ficam no volume `arquivos_ajuvet`.
 - **banco**: imagem oficial `postgres:15`, com senha, exposta só em `127.0.0.1`.
+- No computador, a API do container fica em `127.0.0.1:8001` (`PORTA_BACKEND`), e não na 8000,
+  para poder rodar ao mesmo tempo que o `uvicorn` local.
 - Os três têm healthcheck; o backend só sobe com o banco pronto, e o frontend só com o backend.
 - A configuração fica no `.env` da raiz (modelo em `.env.example`).
 
@@ -104,3 +106,4 @@ Navegador ──► Next.js (server action / proxy) ──► FastAPI /auth/* �
 - **Frontend:** http://localhost:3000
 - **Backend:** http://localhost:8000
 - **Swagger:** http://localhost:8000/docs
+- **Backend no Docker:** http://localhost:8001 (Swagger em `/docs`)

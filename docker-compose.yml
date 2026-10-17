@@ -39,7 +39,7 @@ services:
     volumes:
       - arquivos_ajuvet:/app/backend/.arquivos
     ports:
-      - "127.0.0.1:${PORTA_BACKEND:-8000}:8000"
+      - "127.0.0.1:${PORTA_BACKEND:-8001}:8000"
     depends_on:
       banco:
         condition: service_healthy
