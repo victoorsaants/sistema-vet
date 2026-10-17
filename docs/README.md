@@ -5,6 +5,7 @@ Documentos do projeto de consultório veterinário.
 ## Índice
 
 - [Arquitetura](./arquitetura.md)
+- [Docker](./docker.md)
 - [Backend](../backend/README.md)
 - [Frontend](../frontend/README.md)
 
