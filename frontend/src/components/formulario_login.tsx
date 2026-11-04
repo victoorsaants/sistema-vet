@@ -57,7 +57,7 @@ export default function FormularioLogin({ sessao_expirada }: FormularioLoginProp
   return (
     <form
       action={enviar}
-      className="flex flex-col gap-5 rounded-2xl border border-borda bg-superficie p-6 shadow-sm sm:p-10"
+      className="flex flex-col gap-3 rounded-2xl border border-borda bg-superficie p-5 shadow-sm sm:p-6 tela-alta:gap-5 tela-alta:sm:p-10"
     >
       <input type="hidden" name="perfil" value={perfil ?? ""} />
 
@@ -71,7 +71,7 @@ export default function FormularioLogin({ sessao_expirada }: FormularioLoginProp
           placeholder="Usuário"
           defaultValue={estado.email}
           required
-          className="h-14 w-full bg-transparent text-lg text-texto-titulo outline-none placeholder:text-slate-400"
+          className="h-12 w-full bg-transparent text-lg tela-alta:h-14 text-texto-titulo outline-none placeholder:text-slate-400"
         />
       </label>
 
@@ -84,7 +84,7 @@ export default function FormularioLogin({ sessao_expirada }: FormularioLoginProp
           autoComplete="current-password"
           placeholder="Senha"
           required
-          className="h-14 w-full bg-transparent text-lg text-texto-titulo outline-none placeholder:text-slate-400"
+          className="h-12 w-full bg-transparent text-lg tela-alta:h-14 text-texto-titulo outline-none placeholder:text-slate-400"
         />
         <button
           type="button"
@@ -97,7 +97,7 @@ export default function FormularioLogin({ sessao_expirada }: FormularioLoginProp
       </label>
 
       {aviso && (
-        <p role="alert" className="rounded-lg bg-rose-50 px-4 py-3 text-rose-700">
+        <p role="alert" className="rounded-lg bg-rose-50 px-4 py-2 text-rose-700 tela-alta:py-3">
           {aviso}
         </p>
       )}
@@ -105,7 +105,7 @@ export default function FormularioLogin({ sessao_expirada }: FormularioLoginProp
       <button
         type="submit"
         disabled={enviando}
-        className="flex h-14 items-center justify-center gap-3 rounded-xl bg-[#0a4571] text-xl font-semibold text-white shadow-md transition hover:bg-marinho disabled:opacity-70"
+        className="flex h-12 items-center justify-center gap-3 rounded-xl tela-alta:h-14 bg-[#0a4571] text-xl font-semibold text-white shadow-md transition hover:bg-marinho disabled:opacity-70"
       >
         {enviando ? (
           <LoaderCircle className="size-6 animate-spin" />
@@ -121,7 +121,7 @@ export default function FormularioLogin({ sessao_expirada }: FormularioLoginProp
         <span className="h-px flex-1 bg-slate-200" />
       </div>
 
-      <fieldset className="grid gap-4 sm:grid-cols-2">
+      <fieldset className="grid gap-3 sm:grid-cols-2 tela-alta:gap-4">
         <legend className="sr-only">Perfil de acesso</legend>
         {OPCOES_PERFIL.map(({ perfil: valor, titulo, icone: Icone, estilo, estilo_selecionado }) => {
           const selecionado = perfil === valor;
@@ -131,7 +131,7 @@ export default function FormularioLogin({ sessao_expirada }: FormularioLoginProp
               type="button"
               aria-pressed={selecionado}
               onClick={() => definir_perfil(selecionado ? null : valor)}
-              className={`flex items-center gap-4 rounded-xl border px-5 py-4 text-left transition hover:brightness-[0.98] ${estilo} ${
+              className={`flex items-center gap-4 rounded-xl border px-4 py-2 text-left transition tela-alta:px-5 tela-alta:py-4 hover:brightness-[0.98] ${estilo} ${
                 selecionado ? estilo_selecionado : ""
               }`}
             >

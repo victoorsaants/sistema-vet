@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+@custom-variant tela-alta (@media (min-height: 900px));
+@custom-variant tela-baixa (@media (max-height: 700px));
+
 @theme inline {
   --font-sans: var(--font-outfit);
   --font-manuscrita: var(--font-caveat);
@@ -37,4 +40,40 @@
 body {
   background: var(--color-fundo);
   color: var(--color-texto-titulo);
+}
+
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-destaque-suave);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-azul-marca);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-marinho);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--color-destaque-suave);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-color: var(--color-azul-marca) var(--color-destaque-suave);
+    scrollbar-width: thin;
+  }
 }

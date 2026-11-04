@@ -8,8 +8,17 @@ import jwt
 
 from app.repositories.sessao_repository import SessaoRepository
 from app.repositories.usuario_repository import UsuarioRepository
-from app.schemas.auth import CredenciaisLogin, PerfilUsuario, SessaoAutenticada, UsuarioLogado
-from app.services.excecoes import CredenciaisInvalidas, SessaoInvalida, UsuarioSemAcesso
+from app.schemas.auth import (
+    AlteracaoPerfil,
+    AlteracaoSenha,
+    CredenciaisLogin,
+    DadosVeterinarioPerfil,
+    PerfilDetalhado,
+    PerfilUsuario,
+    SessaoAutenticada,
+    UsuarioLogado,
+)
+from app.services.excecoes import CredenciaisInvalidas, DadosInvalidos, SessaoInvalida, UsuarioSemAcesso
 
 ALGORITMO_JWT = "HS256"
 HASH_PARA_USUARIO_INEXISTENTE = bcrypt.hashpw(b"usuario-inexistente", bcrypt.gensalt()).decode()
@@ -82,6 +91,27 @@ class AuthService:
         except SessaoInvalida:
             return
         self._sessao_repository.encerrar(conteudo["sid"])
+
+    def obter_perfil(self, usuario: UsuarioLogado) -> PerfilDetalhado:
+        veterinario = self._usuario_repository.buscar_veterinario(usuario.id)
+        return PerfilDetalhado(
+            **usuario.model_dump(),
+            veterinario=DadosVeterinarioPerfil(**veterinario) if veterinario else None,
+        )
+
+    def atualizar_perfil(self, usuario: UsuarioLogado, entrada: AlteracaoPerfil) -> PerfilDetalhado:
+        self._usuario_repository.atualizar_nome(usuario.id, entrada.nome)
+        return self.obter_perfil(usuario.model_copy(update={"nome": entrada.nome}))
+
+    def alterar_senha(self, usuario: UsuarioLogado, access_token: str, entrada: AlteracaoSenha) -> None:
+        hash_atual = self._usuario_repository.buscar_hash_senha(usuario.id)
+        if hash_atual is None or not senha_confere(entrada.senha_atual, hash_atual):
+            raise DadosInvalidos({"senha_atual": "Senha atual incorreta."})
+        if entrada.nova_senha == entrada.senha_atual:
+            raise DadosInvalidos({"nova_senha": "A nova senha precisa ser diferente da atual."})
+
+        self._usuario_repository.atualizar_senha(usuario.id, gerar_hash_senha(entrada.nova_senha))
+        self._sessao_repository.encerrar_outras_do_usuario(usuario.id, self._decodificar(access_token)["sid"])
 
     def _decodificar(self, access_token: str, verificar_expiracao: bool = True) -> dict:
         try:

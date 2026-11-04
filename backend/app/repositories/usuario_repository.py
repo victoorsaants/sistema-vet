@@ -26,6 +26,17 @@ class UsuarioRepository:
             (usuario_id,),
         ).fetchone()
 
+    def buscar_hash_senha(self, usuario_id: str) -> str | None:
+        linha = self._conexao.execute(
+            "select encrypted_password from auth.users where id = %s", (usuario_id,)
+        ).fetchone()
+        return linha["encrypted_password"] if linha else None
+
+    def buscar_veterinario(self, usuario_id: str) -> dict | None:
+        return self._conexao.execute(
+            "select crmv, especialidade, telefone from veterinarios where perfil_id = %s", (usuario_id,)
+        ).fetchone()
+
     def criar(self, email: str, hash_senha: str) -> str:
         with traduzir_erros_banco():
             return self._conexao.execute(
@@ -50,6 +61,10 @@ class UsuarioRepository:
             "insert into perfis (id, nome, perfil, ativo) values (%s, %s, %s, %s)",
             (usuario_id, nome, perfil, ativo),
         )
+
+    def atualizar_nome(self, usuario_id: str, nome: str) -> None:
+        self._conexao.execute("update perfis set nome = %s where id = %s", (nome, usuario_id))
+        self._conexao.execute("update veterinarios set nome = %s where perfil_id = %s", (nome, usuario_id))
 
     def atualizar_perfil(self, usuario_id: str, nome: str, ativo: bool) -> None:
         self._conexao.execute("update perfis set nome = %s, ativo = %s where id = %s", (nome, ativo, usuario_id))

@@ -3,14 +3,14 @@ from datetime import datetime, timedelta, timezone
 import jwt
 import pytest
 
-from app.schemas.auth import CredenciaisLogin, PerfilUsuario
+from app.schemas.auth import AlteracaoPerfil, AlteracaoSenha, CredenciaisLogin, PerfilUsuario, UsuarioLogado
 from app.services.auth_service import (
     AuthService,
     ConfiguracaoTokens,
     gerar_hash_senha,
     hash_refresh_token,
 )
-from app.services.excecoes import CredenciaisInvalidas, SessaoInvalida, UsuarioSemAcesso
+from app.services.excecoes import CredenciaisInvalidas, DadosInvalidos, SessaoInvalida, UsuarioSemAcesso
 
 SEGREDO = "segredo-de-teste-com-tamanho-suficiente"
 CONFIGURACAO = ConfiguracaoTokens(segredo=SEGREDO, minutos_access=60, dias_refresh=30)
@@ -34,6 +34,18 @@ class UsuariosEmMemoria:
 
     def buscar_por_id(self, usuario_id: str) -> dict | None:
         return self._usuarios.get(usuario_id)
+
+    def buscar_hash_senha(self, usuario_id: str) -> str | None:
+        return self._usuarios[usuario_id]["encrypted_password"]
+
+    def buscar_veterinario(self, usuario_id: str) -> dict | None:
+        return self._usuarios[usuario_id].get("veterinario")
+
+    def atualizar_nome(self, usuario_id: str, nome: str) -> None:
+        self._usuarios[usuario_id]["nome"] = nome
+
+    def atualizar_senha(self, usuario_id: str, hash_senha: str) -> None:
+        self._usuarios[usuario_id]["encrypted_password"] = hash_senha
 
 
 class SessoesEmMemoria:
@@ -65,6 +77,11 @@ class SessoesEmMemoria:
 
     def encerrar(self, sessao_id: str) -> None:
         self.sessoes[sessao_id]["encerrada"] = True
+
+    def encerrar_outras_do_usuario(self, usuario_id: str, sessao_id: str) -> None:
+        for sessao in self.sessoes.values():
+            if sessao["usuario_id"] == usuario_id and sessao["id"] != sessao_id:
+                sessao["encerrada"] = True
 
     def _ativa(self, sessao: dict) -> bool:
         return not sessao["encerrada"] and sessao["expira_em"] > datetime.now(timezone.utc)
@@ -165,3 +182,65 @@ def test_logout_com_token_invalido_nao_falha() -> None:
     servico, _ = criar_servico()
 
     servico.encerrar("lixo")
+
+
+def test_trocar_senha_mantem_a_sessao_atual_e_encerra_as_outras() -> None:
+    servico, _ = criar_servico([{**USUARIO}])
+    outra_sessao = entrar(servico)
+    sessao = entrar(servico)
+
+    servico.alterar_senha(
+        sessao.usuario, sessao.access_token, AlteracaoSenha(senha_atual="segredo123", nova_senha="nova-senha-123")
+    )
+
+    assert servico.obter_usuario(sessao.access_token).id == "u-1"
+    with pytest.raises(SessaoInvalida):
+        servico.obter_usuario(outra_sessao.access_token)
+    with pytest.raises(CredenciaisInvalidas):
+        entrar(servico)
+    assert entrar(servico, senha="nova-senha-123").usuario.id == "u-1"
+
+
+def test_trocar_senha_com_senha_atual_errada_nao_altera_nada() -> None:
+    servico, _ = criar_servico([{**USUARIO}])
+    sessao = entrar(servico)
+
+    with pytest.raises(DadosInvalidos) as erro:
+        servico.alterar_senha(
+            sessao.usuario, sessao.access_token, AlteracaoSenha(senha_atual="errada", nova_senha="nova-senha-123")
+        )
+
+    assert erro.value.campos == {"senha_atual": "Senha atual incorreta."}
+    assert entrar(servico).usuario.id == "u-1"
+
+
+def test_nova_senha_igual_a_atual_e_rejeitada() -> None:
+    servico, _ = criar_servico([{**USUARIO}])
+    sessao = entrar(servico)
+
+    with pytest.raises(DadosInvalidos) as erro:
+        servico.alterar_senha(
+            sessao.usuario, sessao.access_token, AlteracaoSenha(senha_atual="segredo123", nova_senha="segredo123")
+        )
+
+    assert "nova_senha" in erro.value.campos
+
+
+def test_perfil_de_veterinario_traz_dados_do_cadastro() -> None:
+    veterinario = {"crmv": "CRMV-SE 123", "especialidade": "Clínica geral", "telefone": None}
+    servico, _ = criar_servico([{**USUARIO, "perfil": "veterinario", "veterinario": veterinario}])
+
+    perfil = servico.obter_perfil(UsuarioLogado(id="u-1", email=None, nome="Mariana", perfil=PerfilUsuario.VETERINARIO))
+
+    assert perfil.veterinario is not None
+    assert perfil.veterinario.crmv == "CRMV-SE 123"
+
+
+def test_atualizar_perfil_devolve_o_novo_nome() -> None:
+    servico, _ = criar_servico([{**USUARIO}])
+    sessao = entrar(servico)
+
+    perfil = servico.atualizar_perfil(sessao.usuario, AlteracaoPerfil(nome="Mariana Souza"))
+
+    assert perfil.nome == "Mariana Souza"
+    assert servico.obter_usuario(sessao.access_token).nome == "Mariana Souza"

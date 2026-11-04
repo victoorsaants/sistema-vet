@@ -1,23 +1,42 @@
-import { CalendarDays, LogOut, PawPrint } from "lucide-react";
+import Link from "next/link";
+import { CalendarDays, CircleUserRound, LogOut, PawPrint } from "lucide-react";
 
 import MarcaAjuvet from "@/components/marca_ajuvet";
+import MenuCelular from "@/components/menu_celular";
 import Relogio from "@/components/relogio";
 import { sair } from "@/lib/acoes_auth";
+import type { UsuarioLogado } from "@/lib/tipos_auth";
 
-export default function CabecalhoPainel() {
+type CabecalhoPainelProps = {
+  usuario: UsuarioLogado;
+};
+
+export default function CabecalhoPainel({ usuario }: CabecalhoPainelProps) {
   return (
     <header className="relative z-10">
       <div className="flex items-center justify-between bg-marinho px-4 py-3 lg:hidden">
-        <MarcaAjuvet compacta />
-        <form action={sair}>
-          <button
-            type="submit"
-            aria-label="Sair"
+        <div className="flex items-center gap-2">
+          <MenuCelular usuario={usuario} />
+          <MarcaAjuvet compacta />
+        </div>
+        <div className="flex items-center gap-1">
+          <Link
+            href="/perfil"
+            aria-label="Meu perfil"
             className="rounded-lg p-2 text-white/90 hover:bg-white/10 hover:text-white"
           >
-            <LogOut className="size-6" />
-          </button>
-        </form>
+            <CircleUserRound className="size-6" />
+          </Link>
+          <form action={sair}>
+            <button
+              type="submit"
+              aria-label="Sair"
+              className="rounded-lg p-2 text-white/90 hover:bg-white/10 hover:text-white"
+            >
+              <LogOut className="size-6" />
+            </button>
+          </form>
+        </div>
       </div>
 
       <div className="hidden items-center justify-end gap-6 px-10 pt-6 text-texto-titulo sm:flex">

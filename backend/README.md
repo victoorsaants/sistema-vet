@@ -103,6 +103,9 @@ eles são pulados.
 | POST   | `/api/v1/auth/login` | Login com e-mail e senha; devolve tokens e usuário |
 | POST   | `/api/v1/auth/renovar` | Nova sessão a partir do `refresh_token` |
 | GET    | `/api/v1/auth/me` | Usuário do token (`Authorization: Bearer`) |
+| GET    | `/api/v1/auth/perfil` | Dados do usuário logado, com CRMV e especialidade se for veterinário |
+| PUT    | `/api/v1/auth/perfil` | Altera o nome do usuário logado |
+| PUT    | `/api/v1/auth/senha` | Troca a senha do usuário logado e encerra as outras sessões dele |
 | POST   | `/api/v1/auth/logout` | Encerra a sessão do token |
 | GET    | `/api/v1/tutores` | Lista tutores (`busca`, `pagina`, `tamanho`). Só Recepção |
 | POST   | `/api/v1/tutores` | Cadastra tutor. Só Recepção |
