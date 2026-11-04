@@ -12,8 +12,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { sessao } = await searchParams;
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row">
-      <aside className="relative flex flex-col items-center overflow-hidden bg-[#ebf2fa] px-6 pt-10 lg:w-[42%] lg:pt-16">
+    <div className="flex min-h-dvh flex-col lg:h-dvh lg:flex-row">
+      <aside className="relative flex flex-col items-center overflow-hidden bg-[#ebf2fa] px-6 py-4 lg:w-[42%] lg:py-0 lg:pt-8 tela-alta:lg:pt-16">
         <PawPrint
           aria-hidden
           className="absolute top-10 right-8 size-20 rotate-12 text-sky-200"
@@ -32,9 +32,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           width={967}
           height={891}
           preload
-          className="relative w-56 lg:w-80"
+          className="relative w-28 lg:h-[min(30dvh,295px)] lg:w-auto"
         />
-        <p className="relative mt-6 max-w-xs text-2xl leading-snug text-texto-titulo lg:text-3xl">
+        <p className="relative mt-4 hidden max-w-xs text-2xl leading-snug text-texto-titulo lg:block tela-alta:mt-6 tela-alta:text-3xl">
           Cuidando de quem sempre esteve ao seu lado.
         </p>
         <Image
@@ -43,18 +43,20 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           width={640}
           height={458}
           loading="eager"
-          className="relative mt-auto hidden w-full max-w-xl lg:block"
+          className="relative mt-4 hidden min-h-0 w-full max-w-xl flex-1 object-contain object-bottom lg:block"
         />
       </aside>
 
-      <main className="flex flex-1 flex-col items-center justify-center bg-[#f7f8fc] px-4 py-10 sm:px-10">
-        <div className="w-full max-w-2xl">
-          <h1 className="text-center text-4xl font-semibold text-marinho">Bem-vindo ao AjuVet+</h1>
-          <p className="mt-3 mb-10 text-center text-xl text-slate-600">
+      <main className="flex min-h-0 flex-1 flex-col items-center bg-[#f7f8fc] px-4 py-4 sm:px-10 lg:overflow-y-auto tela-alta:py-10">
+        <div className="my-auto w-full max-w-2xl">
+          <h1 className="text-center text-3xl font-semibold text-marinho tela-alta:text-4xl">
+            Bem-vindo ao AjuVet+
+          </h1>
+          <p className="mt-1 mb-4 text-center text-lg text-slate-600 tela-alta:mt-3 tela-alta:mb-10 tela-alta:text-xl">
             Faça login para acessar o sistema.
           </p>
           <FormularioLogin sessao_expirada={sessao === "expirada"} />
-          <p className="mt-16 text-center text-slate-500">
+          <p className="mt-4 text-center text-slate-500 tela-baixa:hidden tela-alta:mt-16">
             AjuVet+ <span className="mx-2">|</span> Sistema de Gestão Veterinária
             <span className="mt-1 block">Mais organização para um cuidado melhor.</span>
           </p>

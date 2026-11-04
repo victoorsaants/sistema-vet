@@ -6,7 +6,10 @@ from app.api.dependencias import (
     obter_usuario_atual,
 )
 from app.schemas.auth import (
+    AlteracaoPerfil,
+    AlteracaoSenha,
     CredenciaisLogin,
+    PerfilDetalhado,
     RenovacaoSessao,
     SessaoAutenticada,
     UsuarioLogado,
@@ -35,6 +38,33 @@ def renovar_sessao(
 @router.get("/me", response_model=UsuarioLogado)
 def usuario_logado(usuario: UsuarioLogado = Depends(obter_usuario_atual)) -> UsuarioLogado:
     return usuario
+
+
+@router.get("/perfil", response_model=PerfilDetalhado)
+def obter_perfil(
+    usuario: UsuarioLogado = Depends(obter_usuario_atual),
+    auth_service: AuthService = Depends(obter_auth_service),
+) -> PerfilDetalhado:
+    return auth_service.obter_perfil(usuario)
+
+
+@router.put("/perfil", response_model=PerfilDetalhado)
+def atualizar_perfil(
+    entrada: AlteracaoPerfil,
+    usuario: UsuarioLogado = Depends(obter_usuario_atual),
+    auth_service: AuthService = Depends(obter_auth_service),
+) -> PerfilDetalhado:
+    return auth_service.atualizar_perfil(usuario, entrada)
+
+
+@router.put("/senha", status_code=status.HTTP_204_NO_CONTENT)
+def alterar_senha(
+    entrada: AlteracaoSenha,
+    usuario: UsuarioLogado = Depends(obter_usuario_atual),
+    access_token: str = Depends(obter_access_token),
+    auth_service: AuthService = Depends(obter_auth_service),
+) -> None:
+    auth_service.alterar_senha(usuario, access_token, entrada)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

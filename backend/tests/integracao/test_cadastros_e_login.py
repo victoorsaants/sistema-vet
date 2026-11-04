@@ -6,7 +6,7 @@ from app.repositories.sessao_repository import SessaoRepository
 from app.repositories.tutor_repository import TutorRepository
 from app.repositories.usuario_repository import UsuarioRepository
 from app.schemas.animal import AnimalEntrada
-from app.schemas.auth import CredenciaisLogin
+from app.schemas.auth import AlteracaoPerfil, AlteracaoSenha, CredenciaisLogin
 from app.schemas.tutor import TutorEntrada
 from app.services.animal_service import AnimalService
 from app.services.auth_service import AuthService, ConfiguracaoTokens, gerar_hash_senha
@@ -93,6 +93,35 @@ def test_microchip_repetido_gera_conflito(conexao: Connection) -> None:
 
     with pytest.raises(ConflitoDados, match="microchip"), conexao.transaction():
         animais.criar(novo_animal(carlos.id, "Rex", microchip="985-321-654-987"))
+
+
+def test_trocar_nome_e_senha_no_banco(conexao: Connection) -> None:
+    usuario_id = conexao.execute(
+        "insert into auth.users (email, encrypted_password) values ('vet@example.com', %s) returning id",
+        (gerar_hash_senha("segredo123"),),
+    ).fetchone()["id"]
+    conexao.execute("insert into perfis (id, nome, perfil) values (%s, 'Vet', 'veterinario')", (usuario_id,))
+    conexao.execute(
+        "insert into veterinarios (perfil_id, nome, crmv) values (%s, 'Vet', 'CRMV-SE 999')", (usuario_id,)
+    )
+    servico = AuthService(UsuarioRepository(conexao), SessaoRepository(conexao), CONFIGURACAO)
+    outra = servico.autenticar(CredenciaisLogin(email="vet@example.com", senha="segredo123"))
+    sessao = servico.autenticar(CredenciaisLogin(email="vet@example.com", senha="segredo123"))
+
+    perfil = servico.atualizar_perfil(sessao.usuario, AlteracaoPerfil(nome="Dra. Vet"))
+    servico.alterar_senha(
+        sessao.usuario, sessao.access_token, AlteracaoSenha(senha_atual="segredo123", nova_senha="nova-senha-123")
+    )
+
+    assert perfil.veterinario is not None and perfil.veterinario.crmv == "CRMV-SE 999"
+    nome_veterinario = conexao.execute(
+        "select nome from veterinarios where perfil_id = %s", (usuario_id,)
+    ).fetchone()["nome"]
+    assert nome_veterinario == "Dra. Vet"
+    assert servico.obter_usuario(sessao.access_token).nome == "Dra. Vet"
+    with pytest.raises(SessaoInvalida):
+        servico.obter_usuario(outra.access_token)
+    assert servico.autenticar(CredenciaisLogin(email="vet@example.com", senha="nova-senha-123")).usuario.id == usuario_id
 
 
 def test_login_renovacao_e_logout_no_banco(conexao: Connection) -> None:

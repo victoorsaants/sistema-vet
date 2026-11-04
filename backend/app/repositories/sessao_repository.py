@@ -42,6 +42,15 @@ class SessaoRepository:
             (sessao_id,),
         )
 
+    def encerrar_outras_do_usuario(self, usuario_id: str, sessao_id: str) -> None:
+        self._conexao.execute(
+            """
+            update auth.sessoes set encerrada_em = now()
+            where usuario_id = %s and id <> %s and encerrada_em is null
+            """,
+            (usuario_id, sessao_id),
+        )
+
     def encerrar_do_usuario(self, usuario_id: str) -> None:
         self._conexao.execute(
             "update auth.sessoes set encerrada_em = now() where usuario_id = %s and encerrada_em is null",

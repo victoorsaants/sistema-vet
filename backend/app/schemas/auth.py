@@ -1,6 +1,9 @@
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from app.schemas.comum import EntradaBase
+from app.schemas.veterinario import validar_senha
 
 
 class PerfilUsuario(str, Enum):
@@ -22,6 +25,27 @@ class UsuarioLogado(BaseModel):
     email: str | None
     nome: str
     perfil: PerfilUsuario
+
+
+class DadosVeterinarioPerfil(BaseModel):
+    crmv: str
+    especialidade: str | None
+    telefone: str | None
+
+
+class PerfilDetalhado(UsuarioLogado):
+    veterinario: DadosVeterinarioPerfil | None
+
+
+class AlteracaoPerfil(EntradaBase):
+    nome: str = Field(min_length=2, max_length=150)
+
+
+class AlteracaoSenha(BaseModel):
+    senha_atual: str = Field(min_length=1, max_length=128)
+    nova_senha: str = Field(min_length=1, max_length=128)
+
+    _validar_nova_senha = field_validator("nova_senha")(validar_senha)
 
 
 class SessaoAutenticada(BaseModel):

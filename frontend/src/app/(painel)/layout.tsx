@@ -9,7 +9,7 @@ export default async function PainelLayout({ children }: LayoutProps<"/">) {
     <div className="flex min-h-screen">
       <MenuLateral usuario={usuario} />
       <div className="relative flex min-w-0 flex-1 flex-col">
-        <CabecalhoPainel />
+        <CabecalhoPainel usuario={usuario} />
         <main className="flex flex-1 flex-col">{children}</main>
       </div>
     </div>
